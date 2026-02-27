@@ -5,6 +5,16 @@ import random
 from GPT import GPT, Tokenizer
 from GPTdatasetLoader import getDataLoaders
 from functions import *
+import signal
+
+stop_requested = False
+
+def handle_sigint(signum, frame):
+    global stop_requested
+    print("\nCtrl+C detected. Will stop after current iteration.")
+    stop_requested = True
+
+signal.signal(signal.SIGINT, handle_sigint)
 
 BATCH_SIZE = 256
 LEARNING_RATE = 3e-5
@@ -38,9 +48,10 @@ train_dataloader, test_dataloader = getDataLoaders(BATCH_SIZE, tokenizer, max_le
 # ✓ create train function
 # ✓ debug
 # ✓ run it on the laptop
-# ✓ make it run on GPU - MFW it already does - MFW IT DOES NOT ????
-# - run it on a real computer
-# ? PROFIT ?????
+# ✓ make it run on GPU - MFW it already does - MFW IT DOES NOT ???? - We need linux :(
+# ✓ run it on a real computer
+# ✓ fail to profit
+# - PROFIT ?????
 
 print("Initializing Functions ...")
 
@@ -63,20 +74,22 @@ def train(model, trainloader, testloader, optim, print_every, loss, compute_accu
                 test_loss, test_accuracy = evaluate(model, testloader, loss, compute_accuracy, num_batches = 1)
                 print(f"{step=:03d}, train_loss={train_loss.item():8.5f}, ", f"test_loss={test_loss.item():8.5f}, test_accuracy={test_accuracy.item():.2%}")
             step += 1
-    except KeyboardInterrupt:
-        return model
+            if stop_requested:
+                break;
     except Exception as e:
         print("Error occured:")
         raise e
+    return model
 
 print("Initializing model ...")
 datakey, modelkey = jax.random.split(key, 2)
 model = GPT(tokenizer.getVocabSize(), max_length, embedding_size, embedding_size, intermediate_size, num_layers, num_heads, dropout_rate, attention_dropout_rate, modelkey)
-model = eqx.tree_deserialise_leaves("models/GPT_1.4.eqx", model)
+model = eqx.tree_deserialise_leaves("embedding/models/GPT_1.4.eqx", model)
 optim = optax.rmsprop(LEARNING_RATE)
 
 print("Launching!")
 model = train(model, train_dataloader, test_dataloader, optim, PRINT_EVERY, fullCrossEntropy, compute_accuracy, key=key)
 print("Train Successful!")
-eqx.tree_serialise_leaves(f"models/GPT_1.4.eqx", model)
-print("Model saved!")
+if (input("Save model (y/N)? ").lower() == "y"):
+    eqx.tree_serialise_leaves(f"embedding/models/GPT_1.4.eqx", model)
+    print("Model saved!")

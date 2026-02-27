@@ -26,7 +26,7 @@ history = " [INST] "
 print("Loading Model ...")
 
 model = GPT(tokenizer.getVocabSize(), max_length, embedding_size, embedding_size, intermediate_size, num_layers, num_heads, dropout_rate, attention_dropout_rate, key)
-model = eqx.tree_deserialise_leaves("models/GPT_1.4.eqx", model)
+model = eqx.tree_deserialise_leaves("embedding/models/GPT_1.4.eqx", model)
 
 print("Loading Functions ...")
 

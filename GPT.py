@@ -6,7 +6,7 @@ class Tokenizer():
     tokens: list
     def __init__(self):
         self.tokens = []
-        with open("tokens.txt", "r") as f:
+        with open("embedding/tokens.txt", "r") as f:
             for line in f.readlines():
                 self.tokens.append(line.strip())
         self.tokens.append("\n")
